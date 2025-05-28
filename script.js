@@ -180,25 +180,47 @@ if (projectsSlider) {
   });
 }
 
-// Обработка свайпов для основного слайдера
+// Обработчики свайпов для основного слайдера
 if (projectsSlider) {
+  let touchStartTime = 0;
+  let isScrolling = false;
+
   projectsSlider.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
-  });
+    touchStartTime = Date.now();
+    isScrolling = false;
+  }, { passive: true });
+
+  projectsSlider.addEventListener('touchmove', () => {
+    isScrolling = true;
+  }, { passive: true });
 
   projectsSlider.addEventListener('touchend', (e) => {
+    if (!isScrolling) return; // Если не было движения - это клик
+    
     touchEndX = e.changedTouches[0].screenX;
     const swipeDistance = touchEndX - touchStartX;
+    const swipeTime = Date.now() - touchStartTime;
 
-    if (swipeDistance > 50) {
-      prevFullscreen();
-    } else if (swipeDistance < -50) {
-      nextFullscreen();
+    // Определяем, был ли это быстрый свайп
+    if (swipeTime < 300 && Math.abs(swipeDistance) > 50) {
+      e.preventDefault();
+      if (swipeDistance > 50) {
+        projectsSlider.scrollBy({
+          left: -projectsSlider.offsetWidth,
+          behavior: 'smooth'
+        });
+      } else if (swipeDistance < -50) {
+        projectsSlider.scrollBy({
+          left: projectsSlider.offsetWidth,
+          behavior: 'smooth'
+        });
+      }
     }
-  });
+  }, { passive: false });
 }
 
-// Обработка свайпов для полноэкранного режима
+// Обработчики свайпов для полноэкранного режима
 if (fullscreenProject) {
   fullscreenProject.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
